@@ -1,0 +1,44 @@
+﻿openapi: 3.1.0
+info:
+  title: alleycats API
+  version: 1.0.0
+  description: Public discovery and status endpoints for alleycats.
+servers:
+  - url: https://alleycats.platphormnews.com
+paths:
+  /api/health:
+    get:
+      summary: Health check
+      operationId: getHealth
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Healthy
+  /api/v1/health:
+    get:
+      summary: Health check v1
+      operationId: getHealthV1
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Healthy
+  /api/docs:
+    get:
+      summary: OpenAPI specification
+      operationId: getOpenApi
+      tags:
+        - Meta
+      responses:
+        '200':
+          description: OpenAPI specification
+  /api/mcp:
+    get:
+      summary: MCP metadata endpoint
+      operationId: getMcp
+      tags:
+        - MCP
+      responses:
+        '200':
+          description: MCP manifest

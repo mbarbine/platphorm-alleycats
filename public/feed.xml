@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+  <channel>
+    <title>Alleycats</title>
+    <link>https://alleycats.platphormnews.com</link>
+    <description>Feed for the alleycats service</description>
+    <lastBuildDate>Sun, 19 Jul 2026 01:53:51 GMT</lastBuildDate>
+    <item>
+      <title>Alleycats service status</title>
+      <link>https://alleycats.platphormnews.com/status</link>
+      <description>Current status and discovery summary.</description>
+    </item>
+  </channel>
+</rss>

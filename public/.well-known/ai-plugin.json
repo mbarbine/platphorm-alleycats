@@ -1,0 +1,17 @@
+﻿{
+    "schema_version":  "v1",
+    "name_for_human":  "alleycats API",
+    "name_for_model":  "alleycats service",
+    "description_for_human":  "Public discovery and status endpoints for alleycats.",
+    "description_for_model":  "Use this endpoint set to access API and metadata for alleycats.",
+    "auth":  {
+                 "type":  "none"
+             },
+    "api":  {
+                "type":  "openapi",
+                "url":  "https://alleycats.platphormnews.com/openapi.json"
+            },
+    "logo_url":  "https://alleycats.platphormnews.com/favicon.ico",
+    "contact_email":  "support@platphormnews.com",
+    "legal_info_url":  "https://alleycats.platphormnews.com/.well-known/trust.json"
+}

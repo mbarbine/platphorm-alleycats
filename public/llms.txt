@@ -1,0 +1,6 @@
+Alleycats public docs: https://alleycats.platphormnews.com
+https://alleycats.platphormnews.com/
+https://alleycats.platphormnews.com/api/health
+https://alleycats.platphormnews.com/.well-known/mcp.json
+https://alleycats.platphormnews.com/openapi.json
+https://alleycats.platphormnews.com/rss.xml

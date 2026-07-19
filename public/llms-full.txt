@@ -1,0 +1,11 @@
+# Alleycats
+
+Service endpoints:
+- https://alleycats.platphormnews.com/
+- https://alleycats.platphormnews.com/api/health
+- https://alleycats.platphormnews.com/.well-known/mcp.json
+- https://alleycats.platphormnews.com/openapi.json
+- https://alleycats.platphormnews.com/rss.xml
+- https://alleycats.platphormnews.com/sitemap.xml
+- https://alleycats.platphormnews.com/manifest.webmanifest
+- https://alleycats.platphormnews.com/robots.txt

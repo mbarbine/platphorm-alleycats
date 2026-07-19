@@ -1,0 +1,10 @@
+{
+    "description":  "MCP manifest for Alleycats",
+    "updatedAt":  "2026-07-19T01:53:51Z",
+    "name":  "Alleycats",
+    "transport":  "https",
+    "discoveryUrl":  "https://alleycats.platphormnews.com/.well-known/mcp.json",
+    "apiUrl":  "https://alleycats.platphormnews.com/api/mcp",
+    "protocol":  "json-rpc-2.0",
+    "version":  "1.0.0"
+}
