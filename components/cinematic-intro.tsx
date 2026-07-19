@@ -17,7 +17,6 @@ export function CinematicIntro({ onComplete, onSkip }: CinematicIntroProps) {
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ['start start', 'end end'],
-    layoutEffect: false, // Prevents hydration issues
   })
 
   // Lighter spring for mobile performance

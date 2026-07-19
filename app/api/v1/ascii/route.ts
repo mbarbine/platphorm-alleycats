@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    const page = alleycatsZine.pages.find(p => p.number === pageNumber)
+    const page = alleycatsZine.pages.find(p => p.pageNumber === pageNumber)
     if (!page) {
       return NextResponse.json({ error: 'Page not found' }, { status: 404 })
     }
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json({
       page: {
-        number: page.number,
+        number: page.pageNumber,
         type: page.type,
         title: page.title,
       },

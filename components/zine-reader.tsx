@@ -89,8 +89,15 @@ export function ZineReader({ onBack }: ZineReaderProps) {
   
   // Update helpers that persist to localStorage
   const setReadingMode = (mode: ReadingMode) => updatePreference('readingMode', mode)
-  const setZoom = (z: number) => updatePreference('zoom', z)
-  const setImageRotation = (r: number) => updatePreference('imageRotation', r)
+  const setZoom = (value: number | ((current: number) => number)) => {
+    updatePreference('zoom', typeof value === 'function' ? value(zoom) : value)
+  }
+  const setImageRotation = (value: number | ((current: number) => number)) => {
+    updatePreference(
+      'imageRotation',
+      typeof value === 'function' ? value(imageRotation) : value
+    )
+  }
   const setIsAsciiMode = (a: boolean) => updatePreference('isAsciiMode', a)
   const setViewMode = (mode: 'both' | 'image' | 'text') => updatePreference('viewMode', mode)
   
@@ -100,7 +107,7 @@ export function ZineReader({ onBack }: ZineReaderProps) {
       setCurrentPage(preferences.lastPage)
       // Set rotation to page's default
       const page = alleycatsZine.pages[preferences.lastPage]
-      const defaultRot = (page as { defaultRotation?: number })?.defaultRotation ?? 0
+      const defaultRot = page?.defaultRotation ?? 0
       if (defaultRot !== 0) {
         setImageRotation(defaultRot)
       }
@@ -138,7 +145,7 @@ export function ZineReader({ onBack }: ZineReaderProps) {
   // Get default rotation for a page (some photos are taken vertically)
   const getDefaultRotation = useCallback((pageIndex: number) => {
     const page = pages[pageIndex]
-    return (page as { defaultRotation?: number })?.defaultRotation ?? 0
+    return page?.defaultRotation ?? 0
   }, [pages])
 
   const nextPage = useCallback(() => {

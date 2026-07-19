@@ -1,151 +1,119 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { alleycatsZine, tableOfContents, contributors, SITE_CONFIG, zineMeta } from '@/lib/zine-data'
+import { NextResponse } from 'next/server'
+import { alleycatsZine, contributors, SITE_CONFIG, tableOfContents } from '@/lib/zine-data'
 
 export const runtime = 'edge'
 
-/**
- * MCP (Model Context Protocol) endpoint for AI assistants
- * Provides structured data about the zine for AI tools and agents
- */
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url)
-  const format = searchParams.get('format') || 'json'
-  const section = searchParams.get('section')
-  
-  const mcpData = {
-    '@context': 'https://schema.org',
-    '@type': 'Dataset',
-    name: 'Alleycats Alcove Zine MCP Data',
-    description: 'Machine-readable data for the Alleycats Alcove collaborative zine',
-    version: SITE_CONFIG.version,
-    dateModified: new Date().toISOString(),
-    
-    // Site information
-    site: {
-      name: SITE_CONFIG.name,
-      tagline: SITE_CONFIG.tagline,
-      domain: SITE_CONFIG.domain,
-      location: SITE_CONFIG.location,
-      meetup: SITE_CONFIG.meetup,
-    },
-    
-    // Current issue
-    currentIssue: {
-      id: alleycatsZine.id,
-      title: alleycatsZine.title,
-      subtitle: alleycatsZine.subtitle,
-      issue: alleycatsZine.issue,
-      date: alleycatsZine.date,
-      theme: alleycatsZine.theme,
-      pages: alleycatsZine.pages.map(p => ({
-        id: p.id,
-        type: p.type,
-        title: p.title,
-        author: p.author,
-        pageNumber: p.pageNumber,
-        hasContent: !!p.content,
-      })),
-    },
-    
-    // Table of contents
-    tableOfContents: tableOfContents.map(item => ({
-      number: item.number,
-      title: item.title,
-      author: item.author,
-      pageNumber: item.pageNumber,
-    })),
-    
-    // Contributors
-    contributors: contributors.map(c => ({
-      name: c.name,
-      pieces: c.pieces,
-      pieceCount: c.pieces.length,
-    })),
-    
-    // Multilingual metadata
-    i18n: zineMeta,
-    
-    // API capabilities
-    api: {
-      health: '/api/health',
-      zine: '/api/v1/zine',
-      contributors: '/api/v1/contributors',
-      mcp: '/api/mcp',
-    },
-    
-    // Instructions for AI assistants
-    aiInstructions: {
-      purpose: 'This is a collaborative zine supporting local artists. The content is creative writing and poetry.',
-      recommended_actions: [
-        'Help users navigate and read the zine',
-        'Provide information about contributors',
-        'Explain the theme and context',
-        'Share submission guidelines for future issues',
-      ],
-      content_warning: 'Some content includes mature themes related to substances (cigarettes, alcohol, caffeine). This is literary/artistic expression.',
-      next_issue: {
-        theme: 'Wildest Dreams',
-        deadline: 'May 15th',
-        submission: "Submit to the Writer's Alcove",
-      },
-    },
-  }
-  
-  // Filter by section if requested
-  if (section && section in mcpData) {
-    return NextResponse.json({
-      section,
-      data: mcpData[section as keyof typeof mcpData],
-    })
-  }
-  
-  return NextResponse.json(mcpData, {
-    headers: {
-      'Content-Type': 'application/json',
-      'Cache-Control': 'public, max-age=3600',
-      'X-MCP-Version': '1.0',
-    },
-  })
+type RpcRequest = { jsonrpc?: unknown; id?: unknown; method?: unknown; params?: unknown }
+
+const tools = [
+  { name: 'get_zine_page', description: 'Read one real page from the current Alleycats zine.', inputSchema: { type: 'object', properties: { pageNumber: { type: 'integer', minimum: 1 } }, required: ['pageNumber'], additionalProperties: false } },
+  { name: 'find_contributor', description: 'Find a published contributor by name.', inputSchema: { type: 'object', properties: { name: { type: 'string', minLength: 1 } }, required: ['name'], additionalProperties: false } },
+  { name: 'search_zine', description: 'Search published zine page titles and content.', inputSchema: { type: 'object', properties: { query: { type: 'string', minLength: 1 } }, required: ['query'], additionalProperties: false } },
+]
+
+const resources = [
+  { uri: 'zine://current', name: 'Current zine', description: 'Published metadata and table of contents for the current issue.', mimeType: 'application/json' },
+  { uri: 'zine://contributors', name: 'Contributors', description: 'Published contributor credits and piece lists.', mimeType: 'application/json' },
+]
+
+const prompts = [
+  { name: 'navigate_zine', description: 'Help a reader find relevant published pages.', arguments: [{ name: 'interest', description: 'Reader interest or topic.', required: true }] },
+  { name: 'contributor_context', description: 'Summarize a contributor using published credits only.', arguments: [{ name: 'name', description: 'Published contributor name.', required: true }] },
+]
+
+function error(id: unknown, code: number, message: string, data?: unknown) {
+  return { jsonrpc: '2.0', id: id ?? null, error: { code, message, ...(data === undefined ? {} : { data }) } }
 }
 
-// POST for future agent interactions
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json()
-    const { action, params } = body
-    
-    switch (action) {
-      case 'getPage':
-        const pageNum = params?.pageNumber || 1
-        const page = alleycatsZine.pages.find(p => p.pageNumber === pageNum)
-        return NextResponse.json({ success: true, page })
-        
-      case 'getContributor':
-        const name = params?.name
-        const contributor = contributors.find(c => 
-          c.name.toLowerCase().includes(name?.toLowerCase() || '')
-        )
-        return NextResponse.json({ success: true, contributor })
-        
-      case 'searchContent':
-        const query = params?.query?.toLowerCase() || ''
-        const results = alleycatsZine.pages.filter(p => 
-          p.content?.toLowerCase().includes(query) ||
-          p.title?.toLowerCase().includes(query)
-        )
-        return NextResponse.json({ success: true, results })
-        
-      default:
-        return NextResponse.json({ 
-          success: false, 
-          error: 'Unknown action',
-          availableActions: ['getPage', 'getContributor', 'searchContent'],
-        }, { status: 400 })
-    }
-  } catch {
-    return NextResponse.json({ 
-      success: false, 
-      error: 'Invalid request body' 
-    }, { status: 400 })
+function result(id: unknown, value: unknown) {
+  return { jsonrpc: '2.0', id: id ?? null, result: value }
+}
+
+function record(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {}
+}
+
+function toolCall(id: unknown, params: Record<string, unknown>) {
+  const name = typeof params.name === 'string' ? params.name : ''
+  const args = record(params.arguments)
+
+  if (name === 'get_zine_page') {
+    const pageNumber = Number(args.pageNumber)
+    if (!Number.isInteger(pageNumber) || pageNumber < 1) return error(id, -32602, 'pageNumber must be a positive integer.')
+    const page = alleycatsZine.pages.find((candidate) => candidate.pageNumber === pageNumber)
+    if (!page) return error(id, -32004, 'Published zine page not found.')
+    return result(id, { content: [{ type: 'text', text: JSON.stringify(page) }], structuredContent: page })
   }
+
+  if (name === 'find_contributor') {
+    const query = typeof args.name === 'string' ? args.name.trim().toLowerCase() : ''
+    if (!query) return error(id, -32602, 'name is required.')
+    const contributor = contributors.find((candidate) => candidate.name.toLowerCase().includes(query))
+    if (!contributor) return error(id, -32004, 'Published contributor not found.')
+    return result(id, { content: [{ type: 'text', text: JSON.stringify(contributor) }], structuredContent: contributor })
+  }
+
+  if (name === 'search_zine') {
+    const query = typeof args.query === 'string' ? args.query.trim().toLowerCase() : ''
+    if (!query) return error(id, -32602, 'query is required.')
+    const matches = alleycatsZine.pages.filter((page) => page.title?.toLowerCase().includes(query) || page.content?.toLowerCase().includes(query))
+    return result(id, { content: [{ type: 'text', text: JSON.stringify(matches) }], structuredContent: { matches } })
+  }
+
+  return error(id, -32601, 'Tool not found.')
+}
+
+function handle(request: RpcRequest) {
+  const id = request.id
+  if (request.jsonrpc !== '2.0' || typeof request.method !== 'string') return error(id, -32600, 'Invalid JSON-RPC 2.0 request.')
+  const params = record(request.params)
+
+  switch (request.method) {
+    case 'initialize':
+      return result(id, { protocolVersion: '2024-11-05', capabilities: { tools: {}, resources: {}, prompts: {} }, serverInfo: { name: 'alleycats-alcove-zine', version: SITE_CONFIG.version } })
+    case 'ping':
+      return result(id, {})
+    case 'tools/list':
+      return result(id, { tools })
+    case 'tools/call':
+      return toolCall(id, params)
+    case 'resources/list':
+      return result(id, { resources })
+    case 'resources/read': {
+      const uri = typeof params.uri === 'string' ? params.uri : ''
+      if (uri === 'zine://current') return result(id, { contents: [{ uri, mimeType: 'application/json', text: JSON.stringify({ issue: alleycatsZine.issue, title: alleycatsZine.title, theme: alleycatsZine.theme, tableOfContents }) }] })
+      if (uri === 'zine://contributors') return result(id, { contents: [{ uri, mimeType: 'application/json', text: JSON.stringify(contributors) }] })
+      return error(id, -32002, 'Resource not found.')
+    }
+    case 'prompts/list':
+      return result(id, { prompts })
+    case 'prompts/get': {
+      const name = typeof params.name === 'string' ? params.name : ''
+      const args = record(params.arguments)
+      if (name === 'navigate_zine') return result(id, { description: prompts[0].description, messages: [{ role: 'user', content: { type: 'text', text: `Using published Alleycats pages only, help me find work related to: ${String(args.interest || '')}` } }] })
+      if (name === 'contributor_context') return result(id, { description: prompts[1].description, messages: [{ role: 'user', content: { type: 'text', text: `Using published credits only, summarize the Alleycats contributor: ${String(args.name || '')}` } }] })
+      return error(id, -32003, 'Prompt not found.')
+    }
+    default:
+      return error(id, -32601, 'Method not found.')
+  }
+}
+
+export function GET() {
+  return NextResponse.json({ ok: true, data: { service: 'alleycats-alcove-zine', protocol: 'JSON-RPC 2.0', protocolVersion: '2024-11-05', endpoint: '/api/mcp', methods: ['initialize', 'ping', 'tools/list', 'tools/call', 'resources/list', 'resources/read', 'prompts/list', 'prompts/get'], tools: tools.map((tool) => tool.name), resources: resources.map((resource) => resource.uri), prompts: prompts.map((prompt) => prompt.name) } })
+}
+
+export async function POST(request: Request) {
+  let payload: unknown
+  try {
+    payload = await request.json()
+  } catch {
+    return NextResponse.json(error(null, -32700, 'Parse error.'))
+  }
+
+  if (Array.isArray(payload)) {
+    if (payload.length === 0) return NextResponse.json(error(null, -32600, 'Invalid empty batch.'))
+    return NextResponse.json(payload.map((entry) => handle(record(entry) as RpcRequest)))
+  }
+  return NextResponse.json(handle(record(payload) as RpcRequest))
 }

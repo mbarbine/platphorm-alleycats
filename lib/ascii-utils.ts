@@ -26,7 +26,7 @@ export async function convertToAscii(
     return data.ascii || data.result || input
   } catch {
     // Fallback to local conversion
-    return type === 'text' ? textToAscii(input) : imageToAsciiPlaceholder()
+    return type === 'text' ? textToAscii(input) : imageToAsciiPlaceholder('single')
   }
 }
 

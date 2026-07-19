@@ -18,7 +18,7 @@ export async function GET(
     )
   }
   
-  const page = alleycatsZine.pages.find(p => p.number === pageNum)
+  const page = alleycatsZine.pages.find(p => p.pageNumber === pageNum)
   
   if (!page) {
     return NextResponse.json(

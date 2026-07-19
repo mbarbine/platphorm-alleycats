@@ -6,6 +6,7 @@ export interface ZinePage {
   content?: string
   image: string
   pageNumber: number
+  defaultRotation?: number
 }
 
 export interface ZineIssue {

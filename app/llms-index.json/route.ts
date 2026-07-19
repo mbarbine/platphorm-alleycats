@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { SITE_CONFIG, NEWS_CONTEXT, alleycatsZine } from '@/lib/zine-data'
+import { SITE_CONFIG, NEWS_CONTEXT, alleycatsZine, contributors } from '@/lib/zine-data'
 
 export async function GET() {
   const baseUrl = `https://${SITE_CONFIG.domain}`
@@ -50,7 +50,7 @@ export async function GET() {
       theme: alleycatsZine.theme,
       date: alleycatsZine.date,
       pageCount: alleycatsZine.pages.length,
-      contributorCount: alleycatsZine.contributors.length,
+      contributorCount: contributors.length,
     },
     
     // Next issue
